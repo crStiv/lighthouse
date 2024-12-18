@@ -23,7 +23,7 @@ use types::{
 ///
 /// The blobs are all gossip and kzg verified.
 /// The block has completed all verifications except the availability check.
-/// TODO(das): this struct can potentially be reafactored as blobs and data columns are mutually
+/// TODO(das): this struct can potentially be refactored as blobs and data columns are mutually
 /// exclusive and this could simplify `is_importable`.
 #[derive(Clone)]
 pub struct PendingComponents<E: EthSpec> {
