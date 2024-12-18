@@ -622,7 +622,7 @@ impl<T: BeaconChainTypes> BeaconChain<T> {
 
         // Hold a lock to head_tracker until it has been persisted to disk. Otherwise there's a race
         // condition with the pruning thread which can result in a block present in the head tracker
-        // but absent in the DB. This inconsistency halts pruning and dramastically increases disk
+        // but absent in the DB. This inconsistency halts pruning and drastically increases disk
         // size. Ref: https://github.com/sigp/lighthouse/issues/4773
         let head_tracker = self.head_tracker.0.read();
         batch.push(self.persist_head_in_batch(&head_tracker));
@@ -2903,7 +2903,7 @@ impl<T: BeaconChainTypes> BeaconChain<T> {
     /// be pruned on finalization, on a timeout or by a max count.
     pub async fn process_sampling_completed(self: &Arc<Self>, block_root: Hash256) {
         // TODO(das): update fork-choice
-        // NOTE: It is possible that sampling complets before block is imported into fork choice,
+        // NOTE: It is possible that sampling completes before block is imported into fork choice,
         // in that case we may need to update availability cache.
         // TODO(das): These log levels are too high, reduce once DAS matures
         info!(self.log, "Sampling completed"; "block_root" => %block_root);
@@ -4080,7 +4080,7 @@ impl<T: BeaconChainTypes> BeaconChain<T> {
         }
     }
 
-    /// Check block's consistentency with any configured weak subjectivity checkpoint.
+    /// Check block's consistency with any configured weak subjectivity checkpoint.
     fn check_block_against_weak_subjectivity_checkpoint(
         &self,
         block: BeaconBlockRef<T::EthSpec>,
