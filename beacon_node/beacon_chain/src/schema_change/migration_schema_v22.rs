@@ -96,7 +96,7 @@ pub fn upgrade_to_v22<T: BeaconChainTypes>(
 
     // Now we update the anchor and the schema version atomically in the hot database.
     //
-    // If we crash after commiting this change, then there will be some leftover cruft left in the
+    // If we crash after committing this change, then there will be some leftover cruft left in the
     // freezer database, but no corruption because all the new-format data has already been written
     // above.
     let new_anchor = AnchorInfo {
