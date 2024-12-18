@@ -478,7 +478,7 @@ impl<T: BeaconChainTypes> BeaconBlockStreamer<T> {
         let mut ordered_block_roots = Vec::new();
         let mut requests = HashMap::new();
 
-        // we sort the by range blocks by slot before adding them to the
+        // we sort them by range blocks by slot before adding them to the
         // request as it should *better* optimize the number of blocks that
         // can fit in the same request
         let mut by_range_blocks: Vec<BlockParts<T::EthSpec>> = vec![];
