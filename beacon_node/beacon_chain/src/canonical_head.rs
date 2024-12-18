@@ -1248,7 +1248,7 @@ pub fn find_reorg_slot<E: EthSpec>(
     //
     // The iterator will be skipped until the next value returns `lowest_slot`.
     //
-    // This is a macro instead of a function or closure due to the complex types invloved
+    // This is a macro instead of a function or closure due to the complex types involved
     // in all the iterator wrapping.
     macro_rules! aligned_roots_iter {
         ($state: ident, $block_root: ident) => {
