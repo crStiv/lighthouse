@@ -180,7 +180,9 @@ impl SystemHealth {
         let cpu =
             psutil::cpu::cpu_times().map_err(|e| format!("Unable to get cpu times: {:?}", e))?;
 
-        let disk_usage = psutil::disk::disk_usage("/")
+        let data_dir = std::env::var("LIGHTHOUSE_DATADIR").unwrap_or_else(|_| "/".to_string());
+        
+        let disk_usage = psutil::disk::disk_usage(&data_dir)
             .map_err(|e| format!("Unable to disk usage info: {:?}", e))?;
 
         let disk = psutil::disk::DiskIoCountersCollector::default()
