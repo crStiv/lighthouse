@@ -18,6 +18,11 @@ use serde::{Deserialize, Serialize};
 use ssz::four_byte_option_impl;
 use ssz_derive::{Decode, Encode};
 use store::{AnchorInfo, BlobInfo, Split, StoreConfig};
+use beacon_node::config::get_data_dir;
+use clap::ArgMatches;
+use client::Config as ClientConfig;
+use directory::{DEFAULT_BEACON_NODE_DIR, DEFAULT_ROOT_DIR};
+use std::path::PathBuf;
 
 pub use attestation_performance::{
     AttestationPerformance, AttestationPerformanceQuery, AttestationPerformanceStatistics,
@@ -162,9 +167,45 @@ pub struct SystemHealth {
     pub misc_node_boot_ts_seconds: u64,
     /// OS
     pub misc_os: String,
+    /// Data directory path
+    pub data_dir: String,
 }
 
 impl SystemHealth {
+    /// Gets the network which should be used.
+    fn get_network() -> String {
+        // Try to get network from command line arguments
+        let args: Vec<String> = std::env::args().collect();
+        if let Some(pos) = args.iter().position(|x| x == "--network") {
+            if pos + 1 < args.len() {
+                return args[pos + 1].clone();
+            }
+        }
+
+        // Default to mainnet
+        "mainnet".to_string()
+    }
+
+    /// Gets the datadir which should be used.
+    fn get_data_dir() -> PathBuf {
+        // Try to get datadir from command line arguments
+        let args: Vec<String> = std::env::args().collect();
+        if let Some(pos) = args.iter().position(|x| x == "--datadir") {
+            if pos + 1 < args.len() {
+                return PathBuf::from(&args[pos + 1]).join(DEFAULT_BEACON_NODE_DIR);
+            }
+        }
+
+        // If not found in args, use default path
+        dirs::home_dir()
+            .map(|home| {
+                home.join(DEFAULT_ROOT_DIR)
+                    .join(Self::get_network())
+                    .join(DEFAULT_BEACON_NODE_DIR)
+            })
+            .unwrap_or_else(|| PathBuf::from("/"))
+    }
+
     #[cfg(not(target_os = "linux"))]
     pub fn observe() -> Result<Self, String> {
         Err("Health is only available on Linux".into())
@@ -180,13 +221,12 @@ impl SystemHealth {
         let cpu =
             psutil::cpu::cpu_times().map_err(|e| format!("Unable to get cpu times: {:?}", e))?;
 
-        let data_dir = lighthouse_metrics::get_data_dir()
-            .map_err(|e| format!("Unable to get data directory path: {:?}", e))?
-            .to_str()
-            .unwrap_or("/");
-        
-        let disk_usage = psutil::disk::disk_usage(data_dir)
-            .map_err(|e| format!("Unable to get disk usage info for {}: {:?}", data_dir, e))?;
+        // Get the data directory
+        let data_dir = Self::get_data_dir();
+        let data_dir_str = data_dir.to_str().unwrap_or("/");
+
+        let disk_usage = psutil::disk::disk_usage(data_dir_str)
+            .map_err(|e| format!("Unable to get disk usage info for {:?}: {:?}", data_dir, e))?;
 
         let disk = psutil::disk::DiskIoCountersCollector::default()
             .disk_io_counters()
@@ -228,6 +268,7 @@ impl SystemHealth {
             network_node_bytes_total_transmit: net.bytes_sent(),
             misc_node_boot_ts_seconds: boot_time,
             misc_os: std::env::consts::OS.to_string(),
+            data_dir: data_dir_str.to_string(),
         })
     }
 }
