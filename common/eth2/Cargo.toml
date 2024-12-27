@@ -30,6 +30,7 @@ slashing_protection = { workspace = true }
 mediatype = "0.19.13"
 pretty_reqwest_error = { workspace = true }
 derivative = { workspace = true }
+client = { path = "../../beacon_node/client" }
 
 [dev-dependencies]
 tokio = { workspace = true }
