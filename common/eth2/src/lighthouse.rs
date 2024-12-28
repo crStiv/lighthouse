@@ -172,47 +172,13 @@ pub struct SystemHealth {
 }
 
 impl SystemHealth {
-    /// Gets the network which should be used.
-    fn get_network() -> String {
-        // Try to get network from command line arguments
-        let args: Vec<String> = std::env::args().collect();
-        if let Some(pos) = args.iter().position(|x| x == "--network") {
-            if pos + 1 < args.len() {
-                return args[pos + 1].clone();
-            }
-        }
-
-        // Default to mainnet
-        "mainnet".to_string()
-    }
-
-    /// Gets the datadir which should be used.
-    fn get_data_dir() -> PathBuf {
-        // Try to get datadir from command line arguments
-        let args: Vec<String> = std::env::args().collect();
-        if let Some(pos) = args.iter().position(|x| x == "--datadir") {
-            if pos + 1 < args.len() {
-                return PathBuf::from(&args[pos + 1]).join(DEFAULT_BEACON_NODE_DIR);
-            }
-        }
-
-        // If not found in args, use default path
-        dirs::home_dir()
-            .map(|home| {
-                home.join(DEFAULT_ROOT_DIR)
-                    .join(Self::get_network())
-                    .join(DEFAULT_BEACON_NODE_DIR)
-            })
-            .unwrap_or_else(|| PathBuf::from("/"))
-    }
-
     #[cfg(not(target_os = "linux"))]
-    pub fn observe() -> Result<Self, String> {
+    pub fn observe(_config: &ClientConfig) -> Result<Self, String> {
         Err("Health is only available on Linux".into())
     }
 
     #[cfg(target_os = "linux")]
-    pub fn observe() -> Result<Self, String> {
+    pub fn observe(config: &ClientConfig) -> Result<Self, String> {
         let vm = psutil::memory::virtual_memory()
             .map_err(|e| format!("Unable to get virtual memory: {:?}", e))?;
         let loadavg =
@@ -221,8 +187,8 @@ impl SystemHealth {
         let cpu =
             psutil::cpu::cpu_times().map_err(|e| format!("Unable to get cpu times: {:?}", e))?;
 
-        // Get the data directory
-        let data_dir = Self::get_data_dir();
+        // Get the data directory from provided config
+        let data_dir = config.get_data_dir();
         let data_dir_str = data_dir.to_str().unwrap_or("/");
 
         let disk_usage = psutil::disk::disk_usage(data_dir_str)
@@ -330,15 +296,15 @@ impl ProcessHealth {
 
 impl Health {
     #[cfg(not(target_os = "linux"))]
-    pub fn observe() -> Result<Self, String> {
+    pub fn observe(_config: &ClientConfig) -> Result<Self, String> {
         Err("Health is only available on Linux".into())
     }
 
     #[cfg(target_os = "linux")]
-    pub fn observe() -> Result<Self, String> {
+    pub fn observe(config: &ClientConfig) -> Result<Self, String> {
         Ok(Self {
             process: ProcessHealth::observe()?,
-            system: SystemHealth::observe()?,
+            system: SystemHealth::observe(config)?,
         })
     }
 }
