@@ -4039,9 +4039,10 @@ pub fn serve<T: BeaconChainTypes>(
         .and(warp::path("health"))
         .and(warp::path::end())
         .and(task_spawner_filter.clone())
-        .then(|task_spawner: TaskSpawner<T::EthSpec>| {
+        .and(client_config_filter.clone())
+        .then(|task_spawner: TaskSpawner<T::EthSpec>, config: Arc<ClientConfig>| {
             task_spawner.blocking_json_task(Priority::P0, move || {
-                eth2::lighthouse::Health::observe()
+                eth2::lighthouse::Health::observe(&config)
                     .map(api_types::GenericResponse::from)
                     .map_err(warp_utils::reject::custom_bad_request)
             })
